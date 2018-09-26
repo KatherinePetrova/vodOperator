@@ -1,15 +1,15 @@
 <template>
 	<div>
 		<nuxt-link class="logo" to="/"><h1>vodOperator</h1></nuxt-link>
-		<form>
+		<form v-on:submit.prevent="sendInfo">
 			<label id="auth">Регистрация</label>
 			<label class="labs mary" for="login">Логин</label>
-			<input class="inp" type="text" id="login" name="login" v-model="login">
+			<input class="inp" type="text" id="login" name="login" v-model="login" v-on:change="change()" ref="login" required>
 			<label class="labs mary" for="email">E-mail</label>
-			<input class="inp" type="email" id="email" name="mail" v-model="mail">
+			<input class="inp" type="email" id="email" name="mail" v-model="mail" required>
 			<label class="labs mary" for="password">Пароль</label>
-			<input class="inp" type="password" id="password" name="pass" v-model="pass">
-			<input type="button" class="submit" id="submit" @click="sendInfo" value="Зарегестироваться">
+			<input class="inp" type="password" id="password" name="pass" v-model="pass" required>
+			<input type="submit" class="submit" id="submit" v-bind:disabled="dis" value="Зарегестироваться" ref="sub">
 			<nuxt-link to="/login" style="margin-bottom: 2em; font-size: 0.75em; text-decoration: none">Войти</nuxt-link>
 		</form>
 	</div>
@@ -70,6 +70,18 @@
 		color: rgb(0, 153, 77);
 	}
 
+	.submit_dis {
+		margin-top: 1em;
+		margin-bottom: 1em;
+		padding: 1em 3em 1em 3em;
+		transition: 1s;
+		color: white;
+		background: rgb(255, 77, 77);
+		border-style: inherit;
+		font-size: 0.75em;
+		text-decoration: none;
+	}
+
 	.inp {
 		font-size: 0.75em;
 	}
@@ -97,7 +109,8 @@ export default{
     	return{
       		login: '',
       		mail: '',
-      		pass: ''
+      		pass: '',
+      		dis: false
       	}
     },
     methods:{
@@ -105,14 +118,25 @@ export default{
       		axios
         	.post('http://localhost:8000/users/new',{login: this.login, mail:this.mail, pass:this.pass})
         	.then(response => {
-          		let data = response;
-          		if(data.status==='200'){
-          		} else {
-
-          		}
+          		this.$router.push('/login');
         	})
-        	.catch(error => console.log(error));
-      	}
+        	.catch(error => alert(error));
+      	},
+
+      	change(){
+			axios
+				.post('http://localhost:8000/users/compare', {login: this.login})
+				.then(response => {
+					this.$refs.login.style.backgroundColor = 'rgb(255, 179, 179)';
+					this.$refs.sub.setAttribute('class', 'submit_dis');
+					this.dis = true;
+				})
+				.catch(error => {
+					this.$refs.login.style.backgroundColor = 'rgb(179, 255, 153)';
+					this.$refs.sub.setAttribute('class', 'submit');
+					this.dis = false;
+				});
+		}
     }
 }
 </script>
