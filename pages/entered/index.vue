@@ -12,12 +12,63 @@
 				<div class="left-box" style="min-height: 15vh; align-items: center; justify-content: center">
 					<nuxt-link class="logo" to="/" style="margin-bottom: 0px"><h1>vodOperator</h1></nuxt-link>
 				</div>
-				<div class="left-box link">
-					Заявки >
+				<div class="left-box link" v-bind:class="{act: act===0}" @click="switchTable(0)">
+					Новые заявки >
+				</div>
+				<div class="left-box link" v-bind:class="{act: act===1}" @click="switchTable(1)">
+					Принятые заявки >
+				</div>
+				<div class="left-box link" v-bind:class="{act: act===2}" @click="switchTable(2)">
+					Водители >
+				</div>
+				<div class="left-box link exit" @click="logout()">
+					Выход
 				</div>
 			</div>
 			<div class="right">
-
+				<div class="tables" v-if="act===0">
+					<div class="row header">
+						<div class="col">
+							Адрес
+						</div>
+						<div class="col">
+							Время поступления заявки
+						</div>
+						<div class="col">
+							Статус
+						</div>
+						<div class="col">
+							Отправить водителю
+						</div>
+					</div>
+					<div class="row" v-for="item in new_app">
+						<div class="col">
+							{{ item.adress }}
+						</div>
+						<div class="col">
+							{{ item.app_cometime }}
+						</div>
+						<div class="col">
+							{{ item.name }}
+						</div>
+						<div class="col">
+							<button>Отправить водителю</button>
+						</div>
+					</div>
+				</div>
+				<div class="tables" v-else-if="act===1">
+					<div class="row">
+						456
+					</div>
+					<div class="row">
+						456
+					</div>
+				</div>
+				<div class="tables" v-else-if="act===2">
+					<div class="row">
+						456
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -40,7 +91,7 @@
 		flex-direction: column;
 		align-items: center;
 		border-style: solid;
-		border-width: 0.01em;
+		border-width: 1px;
 		border-color: white;
 		padding-left: 5em;
 		padding-right: 5em;
@@ -100,12 +151,14 @@
 		border-right-style: solid;
 		border-width: 1px;
 		border-color: rgba(140, 255, 102, 0.8);
+		position: relative;
 	}
 	div.right {
 		display: flex;
 		min-width: 80vw;
 		min-height: 100vh;
 		background-color: white;
+		justify-content: center;
 	}
 	div.left-box {
 		display: flex;
@@ -122,13 +175,67 @@
 		font-size: 1.25em;
 		color: rgba(166, 166, 166, 0.8);
 	}
+	div.link:hover {
+		background-color: rgba(140, 255, 102, 0.8);
+		color: white;
+		cursor: pointer;
+	}
+	div.act {
+		background-color: rgba(102, 255, 102, 0.8);
+		color: white;
+	}
+	div.exit {
+		background-color: rgba(255, 77, 77, 0.8);
+		position: absolute;
+		bottom: 0;
+		color: white;
+	}
+	div.exit:hover {
+		background-color: rgba(255, 77, 77, 1);
+	}
+	div.tables {
+		display: flex;
+		flex-direction: column;
+		min-height: 100vh;
+		min-width: 80vw;
+		max-height: 100vh;
+		overflow-y: auto;
+	}
+	div.row {
+		display: flex;
+		min-height: 10vh;
+		justify-content: center;
+		background-color: white;
+		border-bottom-style: solid;
+		border-color: rgba(166, 166, 166, 0.8);
+		border-width: 1px;
+	}
+	div.header {
+		font-weight: 500;
+		background-color: rgb(240, 240, 240);
+		position: fixed;
+	}
+	div.col {
+		display: flex;
+		height: 10vh;
+		align-items: center;
+		justify-content: center;
+		width: 20vw;
+		border-right-style: solid;
+		border-color: rgba(166, 166, 166, 0.8);
+		border-width: 1px;
+		text-align: center;
+	}
 </style>
 <script type="text/javascript">
 	import axios from 'axios';
 	export default{
 		data(){
 			return{
-				auth: true
+				auth: true,
+				act: 0,
+				new_app: [],
+				ws: {}
 			}
 		},
 		methods:{
@@ -141,10 +248,38 @@
 					.catch(error => {
 						this.auth = true;
 					});
+			},
+			switchTable(num){
+				this.act = num;
+			},
+			logout(){
+				this.$cookies.set('token', '');
+				this.$router.push('/');
+			},
+			getData(){
+				axios
+					.post('http://localhost:8000/get/new_app', {token: this.$cookies.get('token')})
+					.then(response => {
+						this.new_app = response.data;
+					})
+					.catch(error => {
+						alert('Необходима авторизация');
+					});
+			},
+			wss(){
+				var self = this;
+				var socket = new WebSocket("ws://localhost:8080");
+				socket.onmessage = function(event){
+					var data = JSON.parse(event.data);
+					self.new_app.unshift(data);
+				}
+				this.ws = socket;
 			}
 		},
 		mounted(){
 			this.check();
+			this.getData();
+			this.wss();
 		}
 	}
 </script>
