@@ -116,7 +116,7 @@ export default{
     methods:{
     	sendInfo(){
       		axios
-        	.post('http://localhost:8000/users/new',{login: this.login, mail:this.mail, pass:this.pass})
+        	.post('http://aida.market:8000/users/new',{login: this.login, mail:this.mail, pass:this.pass})
         	.then(response => {
           		this.$router.push('/login');
         	})
@@ -125,7 +125,7 @@ export default{
 
       	change(){
 			axios
-				.post('http://localhost:8000/users/compare', {login: this.login})
+				.post('http://aida.market:8000/users/compare', {login: this.login})
 				.then(response => {
 					this.$refs.login.style.backgroundColor = 'rgb(255, 179, 179)';
 					this.$refs.sub.setAttribute('class', 'submit_dis');

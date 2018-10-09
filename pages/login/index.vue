@@ -126,7 +126,7 @@ export default{
     methods:{
     	sendInfo(){
       		axios
-        	.post('http://localhost:8000/users/login', {login: this.login, pass:this.pass})
+        	.post('http://aida.market:8000/users/login', {login: this.login, pass:this.pass})
         	.then(response => {
           		let data = response;
           		this.$cookies.set('token', data.data);
@@ -136,7 +136,7 @@ export default{
       	},
       	change(){
 			axios
-				.post('http://localhost:8000/users/compare', {login: this.login})
+				.post('http://aida.market:8000/users/compare', {login: this.login})
 				.then(response => {
 					this.$refs.login.style.backgroundColor = 'rgb(179, 255, 153)';
 					this.$refs.sub.setAttribute('class', 'submit');
@@ -150,7 +150,7 @@ export default{
 		},
 		check(){
 			axios
-				.post('http://localhost:8000/users/check', {token: this.$cookies.get('token')})
+				.post('http://aida.market:8000/users/check', {token: this.$cookies.get('token')})
 				.then(response => {
 					this.show = true;
 					this.user = response.data;

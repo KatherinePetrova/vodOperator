@@ -52,18 +52,64 @@
 							{{ item.name }}
 						</div>
 						<div class="col">
-							<button>Отправить водителю</button>
+							<button @click="sendApp(item.id)">Отправить водителю</button>
 						</div>
 					</div>
 				</div>
 				<div class="tables" v-else-if="act===1">
-					<div class="row">
-						456
+					<div class="row header">
+						<div class="col">
+							Имя
+						</div>
+						<div class="col">
+							Номер телефона
+						</div>
+						<div class="col">
+							Марка автомобиля
+						</div>
+						<div class="col">
+							Гос. номер
+						</div>
+						<div class="col">
+							Статус
+						</div>
 					</div>
-					<div class="row">
-						456
+					<div class="row" v-for="item in free_driver">
+						<div class="col">
+							{{ item.name }}
+						</div>
+						<div class="col">
+							{{ item.phone }}
+						</div>
+						<div class="col">
+							{{ item.car }}
+						</div>
+						<div class="col">
+							{{ item.car_number }}
+						</div>
+						<div class="col">
+							Свободен
+						</div>
+					</div>
+					<div class="row" v-for="item in busy_driver">
+						<div class="col">
+							{{ item.name }}
+						</div>
+						<div class="col">
+							{{ item.phone }}
+						</div>
+						<div class="col">
+							{{ item.car }}
+						</div>
+						<div class="col">
+							{{ item.car_number }}
+						</div>
+						<div class="col">
+							Выполняет заявку
+						</div>
 					</div>
 				</div>
+
 				<div class="tables" v-else-if="act===2">
 					<div class="row">
 						456
@@ -235,13 +281,15 @@
 				auth: true,
 				act: 0,
 				new_app: [],
-				ws: {}
+				ws: {},
+				free_driver: [],
+				busy_driver: []
 			}
 		},
 		methods:{
 			check(){
 				axios
-					.post('http://localhost:8000/users/check', {token: this.$cookies.get('token')})
+					.post('http://aida.market:8000/users/check', {token: this.$cookies.get('token')})
 					.then(response => {
 						this.auth = false;
 					})
@@ -258,9 +306,26 @@
 			},
 			getData(){
 				axios
-					.post('http://localhost:8000/get/new_app', {token: this.$cookies.get('token')})
+					.post('http://aida.market:8000/get/new_app', {token: this.$cookies.get('token')})
 					.then(response => {
 						this.new_app = response.data;
+						console.log(new_app);
+					})
+					.catch(error => {
+						alert('Необходима авторизация');
+					});
+
+				axios
+					.post('http://aida.market:8000/get/drivers', {token: this.$cookies.get('token')})
+					.then(response => {
+						var data = response.data;
+						for(var i=0; i<data.length; i++){
+							if(data.status){
+								this.free_driver.push(data[i]);
+							} else {
+								this.busy_driver.push(data[i]);
+							}
+						}
 					})
 					.catch(error => {
 						alert('Необходима авторизация');
@@ -268,12 +333,18 @@
 			},
 			wss(){
 				var self = this;
-				var socket = new WebSocket("ws://localhost:8080");
+				var socket = new WebSocket("ws://aida.market:8001");
 				socket.onmessage = function(event){
 					var data = JSON.parse(event.data);
+					console.log(JSON.parse(event.action));
 					self.new_app.unshift(data);
 				}
 				this.ws = socket;
+			},
+			sendApp(id){
+				
+			},
+			wss(){
 			}
 		},
 		mounted(){
