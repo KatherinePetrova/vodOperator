@@ -1,5 +1,13 @@
 <template>
 	<div class="back">
+		<div class="modal" v-if="modal" @click="modal = false">
+			<form class="no_access">
+				<label id="auth">Отправка водителю</label>
+				<select>
+					<option>df</option>
+				</select>
+			</form>
+		</div>
 		<div class="no_access" v-if="auth">
 			<nuxt-link class="logo" to="/"><h1>vodOperator</h1></nuxt-link>
 			<form class="no_access">
@@ -7,7 +15,7 @@
 				<nuxt-link to="/login" class="submit">Перейти на страницу авторизации</nuxt-link>
 			</form>
 		</div>
-		<div v-else class="main">
+		<div class="main" v-else >
 			<div class="left">
 				<div class="left-box" style="min-height: 15vh; align-items: center; justify-content: center">
 					<nuxt-link class="logo" to="/" style="margin-bottom: 0px"><h1>vodOperator</h1></nuxt-link>
@@ -52,11 +60,14 @@
 							{{ item.name }}
 						</div>
 						<div class="col">
-							<button @click="sendApp(item.id)">Отправить водителю</button>
+							<button class="col" @click="sendApp(item.id)">Отправить водителю</button>
 						</div>
 					</div>
 				</div>
 				<div class="tables" v-else-if="act===1">
+					
+				</div>
+				<div class="tables" v-else-if="act===2">
 					<div class="row header">
 						<div class="col">
 							Имя
@@ -109,17 +120,16 @@
 						</div>
 					</div>
 				</div>
-
-				<div class="tables" v-else-if="act===2">
-					<div class="row">
-						456
-					</div>
-				</div>
 			</div>
 		</div>
 	</div>
 </template>
 <style type="text/css" scoped>
+	html, body {
+		padding: 0;
+		margin: 0;
+		overflow: hidden;
+	}
 	.back {
 		min-height: 100vh;
 		background-color: rgb(245, 245, 245);
@@ -259,7 +269,7 @@
 	div.header {
 		font-weight: 500;
 		background-color: rgb(240, 240, 240);
-		position: fixed;
+		
 	}
 	div.col {
 		display: flex;
@@ -272,6 +282,35 @@
 		border-width: 1px;
 		text-align: center;
 	}
+	button.col {
+		display: flex;
+		min-height: 100%;
+		min-width: 100%;
+		align-items: center;
+		justify-content: center;
+		background-color: rgba(102, 255, 102, 0.8);
+		border-style: hidden;
+		color: white;
+		font-size: 1em;
+		transition: 0.2s;
+	}
+	button.col:hover {
+		cursor: pointer;
+		background-color: rgba(140, 255, 102, 0.8);
+	}
+	button.col:hover {
+		background-color: rgba(140, 255, 102, 0.8);
+	}
+	div.modal {
+		position: absolute;
+		z-index: 999;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: rgba(0, 0, 0, 0.5);
+		min-height: 100vh;
+		min-width: 100vw;
+	}
 </style>
 <script type="text/javascript">
 	import axios from 'axios';
@@ -279,6 +318,7 @@
 		data(){
 			return{
 				auth: true,
+				modal: false,
 				act: 0,
 				new_app: [],
 				ws: {},
@@ -342,7 +382,7 @@
 				this.ws = socket;
 			},
 			sendApp(id){
-				
+				this.modal = true;
 			},
 			wss(){
 			}
