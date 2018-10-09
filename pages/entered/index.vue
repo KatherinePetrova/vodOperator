@@ -1,6 +1,6 @@
 <template>
 	<div class="back">
-		<div class="modal" v-if="modal" @click="modal = false">
+		<div class="modal" v-if="modal">
 			<form class="no_access">
 				<label id="auth">Отправка водителю</label>
 				<select>
