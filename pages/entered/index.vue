@@ -1,12 +1,34 @@
 <template>
 	<div class="back">
-		<div class="modal" v-if="modal">
-			<form class="no_access">
-				<label id="auth">Отправка водителю</label>
-				<select>
-					<option>df</option>
-				</select>
-			</form>
+		<div class="img" v-if="img.open">
+			<h1 class="img" @click="img.open=false">Закрыть</h1>
+			<div class="carousel-wrapper">
+				<input type="radio" checked="checked" id="slide1" class="carousel-selector" name="carousel-selector" />
+				<input type="radio" id="slide2" class="carousel-selector" name="carousel-selector" />
+				<input type="radio" id="slide3" class="carousel-selector" name="carousel-selector" />
+				<input type="radio" id="slide4" class="carousel-selector" name="carousel-selector" />
+
+				<ul class="carousel-items">
+					<li class="carousel-item" v-for="item in img.srcs">
+						<img v-bind:src="item" height="100%">
+					</li>
+				</ul>
+
+				<ul class="carousel-labels">
+					<li class="carousel-label">
+						<label for="slide1"></label>
+					</li>
+					<li class="carousel-label">
+						<label for="slide2"></label>
+					</li>
+					<li class="carousel-label">
+						<label for="slide3"></label>
+					</li>
+					<li class="carousel-label">
+						<label for="slide4"></label>
+					</li>
+				</ul>
+			</div>
 		</div>
 		<div class="no_access" v-if="auth">
 			<nuxt-link class="logo" to="/"><h1>vodOperator</h1></nuxt-link>
@@ -21,10 +43,7 @@
 					<nuxt-link class="logo" to="/" style="margin-bottom: 0px"><h1>vodOperator</h1></nuxt-link>
 				</div>
 				<div class="left-box link" v-bind:class="{act: act===0}" @click="switchTable(0)">
-					Новые заявки >
-				</div>
-				<div class="left-box link" v-bind:class="{act: act===1}" @click="switchTable(1)">
-					Принятые заявки >
+					Заявки >
 				</div>
 				<div class="left-box link" v-bind:class="{act: act===2}" @click="switchTable(2)">
 					Водители >
@@ -40,32 +59,53 @@
 							Адрес
 						</div>
 						<div class="col">
+							Водитель
+						</div>
+						<div class="col">
 							Время поступления заявки
+						</div>
+						<div class="col">
+							Время начала выполнения заявки
+						</div>
+						<div class="col">
+							Время окончания заявки
+						</div>
+						<div class="col">
+							Комиссия
+						</div>
+						<div class="col">
+							Доля водителя
 						</div>
 						<div class="col">
 							Статус
 						</div>
-						<div class="col">
-							Отправить водителю
-						</div>
 					</div>
-					<div class="row" v-for="item in new_app">
+					<div class="row" v-for="item in app">
 						<div class="col">
 							{{ item.adress }}
 						</div>
 						<div class="col">
-							{{ item.app_cometime }}
+							{{ getDriverName(item.driver) }}
 						</div>
 						<div class="col">
-							{{ item.name }}
+							{{ timeParse(item.app_cometime) }}
 						</div>
 						<div class="col">
-							<button class="col" @click="sendApp(item.id)">Отправить водителю</button>
+							{{ timeParse(item.app_start) }}
+						</div>
+						<div class="col">
+							{{ timeParse(item.app_finish) }}
+						</div>
+						<div class="col">
+							{{ item.amount }}
+						</div>
+						<div class="col">
+							{{ item.driver_amount }}
+						</div>
+						<div class="col">
+							{{ app_status[parseInt(item.status)-1].name }}
 						</div>
 					</div>
-				</div>
-				<div class="tables" v-else-if="act===1">
-					
 				</div>
 				<div class="tables" v-else-if="act===2">
 					<div class="row header">
@@ -76,16 +116,16 @@
 							Номер телефона
 						</div>
 						<div class="col">
-							Марка автомобиля
+							Баланс
 						</div>
 						<div class="col">
-							Гос. номер
+							Докумены
 						</div>
 						<div class="col">
 							Статус
 						</div>
 					</div>
-					<div class="row" v-for="item in free_driver">
+					<div class="row" v-for="item in driver">
 						<div class="col">
 							{{ item.name }}
 						</div>
@@ -93,30 +133,20 @@
 							{{ item.phone }}
 						</div>
 						<div class="col">
-							{{ item.car }}
+							{{ item.balance }}
 						</div>
 						<div class="col">
-							{{ item.car_number }}
+							<button class="col" @click="openImages(item)">Смотреть</button>
 						</div>
-						<div class="col">
+						<div class="col" v-if="item.status==1 && item.acceptance==1">
 							Свободен
 						</div>
-					</div>
-					<div class="row" v-for="item in busy_driver">
-						<div class="col">
-							{{ item.name }}
+						<div class="col" v-else-if="item.status==0 && item.acceptance==1">
+							Занят
 						</div>
-						<div class="col">
-							{{ item.phone }}
-						</div>
-						<div class="col">
-							{{ item.car }}
-						</div>
-						<div class="col">
-							{{ item.car_number }}
-						</div>
-						<div class="col">
-							Выполняет заявку
+						<div class="col" v-else-if="item.acceptance==0">
+							<button class="col" @click="accept(item, true)" style="min-width:50%">Подтвердить</button>
+							<button class="col dec" @click="accept(item, false)" style="min-width:50%">Отклонить</button>
 						</div>
 					</div>
 				</div>
@@ -146,6 +176,7 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
+		justify-content: center;
 		border-style: solid;
 		border-width: 1px;
 		border-color: white;
@@ -293,23 +324,124 @@
 		color: white;
 		font-size: 1em;
 		transition: 0.2s;
+		flex-direction: column;
 	}
 	button.col:hover {
 		cursor: pointer;
 		background-color: rgba(140, 255, 102, 0.8);
 	}
-	button.col:hover {
-		background-color: rgba(140, 255, 102, 0.8);
+	button.dec {
+		background-color: rgba(255, 77, 77, 0.8);
 	}
-	div.modal {
+	button.dec:hover {
+		background-color: rgba(255, 77, 77, 1);
+	}
+	div.img {
 		position: absolute;
-		z-index: 999;
 		display: flex;
-		align-items: center;
 		justify-content: center;
+		align-items: center;
 		background-color: rgba(0, 0, 0, 0.5);
+		z-index: 5;
 		min-height: 100vh;
 		min-width: 100vw;
+		flex-direction: column;
+	}
+	h1.img {
+		margin-bottom: 10px;
+		color: rgba(255, 77, 77, 0.8);
+	}
+	h1.img:hover {
+		cursor: pointer;
+		color: rgba(255, 77, 77, 1);
+	}
+	.carousel-items, .carousel-labels {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		display: block;
+	}
+	.carousel-item {
+		display: block;
+		float: left;
+	}
+
+	.carousel-wrapper {
+		width: 80%;
+		position: relative;
+		padding-bottom: 30%;
+		background-color: #eee;
+		overflow: hidden;
+	}
+	.carousel-items {
+		width: 400%;
+		height: 100%;
+		position: absolute;
+		left: 0;
+		top: 0;
+		z-index: 1;
+		transition: left .5s ease-out;
+		-o-transition: left .5s ease-out;
+		-ms-transition: left .5s ease-out;
+		-moz-transition: left .5s ease-out;
+		-webkit-transition: left .5s ease-out;
+	}
+	.carousel-item {
+		width: 25%;
+		height: 100%;
+		background-color: white;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+	.carousel-labels {
+		position: absolute;
+		z-index: 2;
+		left: 0;
+		bottom: 0;
+		height: 20px;
+		width: 100%;
+		padding: 10px 0;
+		text-align: center;
+	}
+	.carousel-selector {
+		display: none;
+	}
+	.carousel-label {
+		display: inline-block;
+	}
+	.carousel-label label {
+		width: 20px;
+		height: 20px;
+		border-radius: 10px;
+		background-color: rgba(102, 255, 102, 0.8);;
+		display: block;
+		cursor: pointer;
+	}
+
+	#slide1:checked ~ .carousel-items {
+		left: 0;
+	}
+	#slide1:checked ~ .carousel-labels .carousel-label:nth-child(1) label {
+		background-color: black;
+	}
+	#slide2:checked ~ .carousel-items {
+		left: -100%;
+	}
+	#slide2:checked ~ .carousel-labels .carousel-label:nth-child(2) label {
+		background-color: black;
+	}
+	#slide3:checked ~ .carousel-items {
+		left: -200%;
+	}
+	#slide3:checked ~ .carousel-labels .carousel-label:nth-child(3) label {
+		background-color: black;
+	}
+	#slide4:checked ~ .carousel-items {
+		left: -300%;
+	}
+	#slide4:checked ~ .carousel-labels .carousel-label:nth-child(4) label {
+		background-color: black;
 	}
 </style>
 <script type="text/javascript">
@@ -318,15 +450,73 @@
 		data(){
 			return{
 				auth: true,
-				modal: false,
 				act: 0,
-				new_app: [],
+				app: [],
 				ws: {},
-				free_driver: [],
-				busy_driver: []
+				driver: [],
+				app_status: [],
+				img: {
+					open: false,
+					srcs: []
+				}
+
 			}
 		},
 		methods:{
+			openImages(item){
+				this.img.open = true;
+				this.img.srcs = [];
+				this.img.srcs.push(item.udo_side1);
+				this.img.srcs.push(item.udo_side2);
+				this.img.srcs.push(item.prava_side1);
+				this.img.srcs.push(item.prava_side2);
+			},
+			async accept(item, bol){
+				if(bol){
+					item.acceptance = 1;
+					var query = await axios.post('http://aida.market:8000/driver/accept', {driver: item});
+					if(query.status==200){
+
+					} else {
+						alert(query.status);
+					}
+				} else {
+					var query = await axios.post('http://aida.market:8000/driver/accept', {driver: item});
+					if(query.status==200){
+
+					} else {
+						alert(query.status);
+					}
+				}
+			},
+			timeParse(str){
+				if(str==null){
+					return ""
+				} else {
+					var result = "";
+					for(var i=0; i<str.length; i++){
+						if(str[i]=="T"){
+							result = result + " ";
+						} else if(str[i]=="."){
+							break
+						} else {
+							result = result + str[i];
+						}
+					}
+					return result
+				}
+			},
+			getDriverName(item){
+				if(typeof item==null){
+					return ""
+				} else {
+					for(var i=0; i<this.driver.length; i++){
+						if(this.driver[i].id==item){
+							return this.driver[i].name
+						}
+					}
+				}
+			},
 			check(){
 				axios
 					.post('http://aida.market:8000/users/check', {token: this.$cookies.get('token')})
@@ -346,29 +536,19 @@
 			},
 			getData(){
 				axios
-					.post('http://aida.market:8000/get/new_app', {token: this.$cookies.get('token')})
-					.then(response => {
-						this.new_app = response.data;
-						console.log(new_app);
-					})
-					.catch(error => {
-						alert('Необходима авторизация');
-					});
-
-				axios
-					.post('http://aida.market:8000/get/drivers', {token: this.$cookies.get('token')})
+					.post('http://aida.market:8000/get/inf', {token: this.$cookies.get('token')})
 					.then(response => {
 						var data = response.data;
-						for(var i=0; i<data.length; i++){
-							if(data.status){
-								this.free_driver.push(data[i]);
-							} else {
-								this.busy_driver.push(data[i]);
-							}
+						console.log(data);
+						for(var i=0; i<data.app.length; i++){
+							this.app.unshift(data.app[i]);
 						}
+						this.driver = data.driver;
+						this.app_status = data.app_status;
+						console.log(data.app_status[0].name);
 					})
 					.catch(error => {
-						alert('Необходима авторизация');
+						console.log(error);
 					});
 			},
 			wss(){
@@ -376,15 +556,43 @@
 				var socket = new WebSocket("ws://aida.market:8001");
 				socket.onmessage = function(event){
 					var data = JSON.parse(event.data);
-					console.log(JSON.parse(event.action));
-					self.new_app.unshift(data);
+					var url = data.action;
+					console.log(url);
+					console.log(data.data);
+					switch(url){
+						case 'app':
+							self.app = [];
+							for(var i=0; i<data.data.length; i++){
+								self.app.unshift(data.data[i]);								
+							}
+							break;
+						case 'driver':
+							self.driver = [];
+							for(var i=0; i<data.data.length; i++){
+								self.driver.unshift(data.data[i]);								
+							}
+							break;
+					}
 				}
 				this.ws = socket;
 			},
-			sendApp(id){
+			sendApp(item){
 				this.modal = true;
+				this.modal_data = item;
 			},
-			wss(){
+			sendToDriver(){
+				axios
+					.post('http://aida.market:8000/update/app/sent', {
+						app: this.modal_data,
+						telegram_id: this.telegram_id
+					})
+					.then(response => {
+						this.modal = false;
+					})
+					.catch(error => {
+						alert(error);
+						this.modal = false;
+					});
 			}
 		},
 		mounted(){
