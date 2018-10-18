@@ -37,6 +37,19 @@
 				<nuxt-link to="/login" class="submit">Перейти на страницу авторизации</nuxt-link>
 			</form>
 		</div>
+		<div class="img" v-if="new_app.open">
+			<form v-on:submit.prevent="sendApp" class="no_access">
+				<label id="auth">Новая заявка</label>
+				<label for="nat">Адрес</label> 
+				<input type="text" v-model="new_app.adress" id="nat" style="width: 100%" required>
+				<select v-model="new_app.area" style="width: 100%; margin-top: 1vh" required>
+					<option value="1">Город</option>
+					<option value="2">Загород</option>
+				</select>
+				<input type="submit" value="Отправить" class="submit">
+				<button class="col dec" @click="new_app.open=false">Отмена</button>
+			</form>
+		</div>
 		<div class="main" v-else >
 			<div class="left">
 				<div class="left-box" style="min-height: 15vh; align-items: center; justify-content: center">
@@ -47,6 +60,9 @@
 				</div>
 				<div class="left-box link" v-bind:class="{act: act===2}" @click="switchTable(2)">
 					Водители >
+				</div>
+				<div class="left-box link" @click="new_app.open=true">
+					Новая заявка >
 				</div>
 				<div class="left-box link exit" @click="logout()">
 					Выход
@@ -458,11 +474,27 @@
 				img: {
 					open: false,
 					srcs: []
+				},
+				new_app: {
+					open: false,
+					adress: "",
+					area: 0
 				}
-
 			}
 		},
 		methods:{
+			sendApp(){
+				console.log(this.new_app);
+				axios
+					.post('http://aida.market:8000/new/app', {adress: this.new_app.adress, area: this.new_app.area})
+					.then(response => {
+						this.new_app.open = false;
+					})
+					.catch(error => {
+						this.new_app.open = false;
+						alert(error);
+					});
+			},
 			openImages(item){
 				this.img.open = true;
 				this.img.srcs = [];
@@ -575,10 +607,6 @@
 					}
 				}
 				this.ws = socket;
-			},
-			sendApp(item){
-				this.modal = true;
-				this.modal_data = item;
 			},
 			sendToDriver(){
 				axios
