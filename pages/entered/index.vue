@@ -47,7 +47,7 @@
 					<option value="2">Загород</option>
 				</select>
 				<input type="submit" value="Отправить" class="submit">
-				<button class="col dec" @click="new_app.open=false">Отмена</button>
+				<a href="#" class="col dec" @click="new_app.open=false">Отмена</a>
 			</form>
 		</div>
 		<div class="main" v-else >
