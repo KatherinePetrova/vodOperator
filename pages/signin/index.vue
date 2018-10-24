@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<nuxt-link class="logo" to="/"><h1>vodOperator</h1></nuxt-link>
+		<nuxt-link class="logo" to="/"><h1>YouDriver</h1></nuxt-link>
 		<form v-on:submit.prevent="sendInfo">
 			<label id="auth">Регистрация</label>
 			<label class="labs mary" for="login">Логин</label>

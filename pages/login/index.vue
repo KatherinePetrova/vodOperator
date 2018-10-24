@@ -1,6 +1,6 @@
 <template>
 	<div>
-		<nuxt-link class="logo" to="/"><h1>vodOperator</h1></nuxt-link>
+		<nuxt-link class="logo" to="/"><h1>YouDriver</h1></nuxt-link>
 		<form v-if="show">
 			<label id="auth">Вы вошли как {{ user }}</label>
 			<nuxt-link to="/entered" class="submit">Продолжить</nuxt-link>
