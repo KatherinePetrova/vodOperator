@@ -70,7 +70,7 @@
 				</div>
 				<div class="ai_header">
 					<div class="app_accept" @click="sendApp(app_inf.inf)" v-if="app_inf.inf.status==1 || app_inf.inf.status==2">Отправить</div>
-					<div class="app_accept app_dec" @click="app_inf.open=false">Отклонить</div>
+					<div class="app_accept app_dec" @click="clientDecline()">Отклонить</div>
 				</div>
 			</div>
 		</div>
@@ -255,6 +255,14 @@
 			}
 		},
 		methods:{
+			async clientDecline(){
+				var query = await axios.post('http://aida.market:8000/cancel/app', {id: this.app_inf.inf.id});
+				if(query.status==200){
+					this.app_inf.open = false;
+				} else {
+					alert(query.status);
+				}
+			},
 			async changeBalance(){
 				var query = await axios.post('http://aida.market:8000/update/driver/balance', 
 										{id: this.balance.id, balance: this.balance.amount});
