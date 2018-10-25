@@ -42,13 +42,34 @@
 						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
 					</div>
 					<div class="aib_block">
+						<h3 style="margin-top: 5px" v-if="app_inf.inf.driver!=null">Водитель</h3>
+						{{ getDriverName(app_inf.inf.driver) }}
+						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
+						<h3 style="margin-top: 5px" v-if="app_inf.inf.app_start!=null">Время начала выполнения заявки</h3>
+						{{ timeParse(app_inf.inf.app_start) }}
+						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
+						<h3 style="margin-top: 5px" v-if="app_inf.inf.app_finish!=null">Время завершения заявки</h3>
+						{{ timeParse(app_inf.inf.app_finish) }}
+						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
 						<h3 style="margin-top: 5px">Статус</h3>
 						{{ app_status[parseInt(app_inf.inf.status)-1].name }}
 						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
 					</div>
+					<div class="aib_block">
+						<h3 style="margin-top: 5px">Тариф</h3>
+						<div v-if="app_inf.inf.area==1">Город</div>
+						<div v-else>Загород</div>
+						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
+						<h3 style="margin-top: 5px" v-if="app_inf.inf.amount!=null">Итоговая стоимость</h3>
+						{{ cost(app_inf.inf.amount, app_inf.inf.driver_amount) }}
+						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
+						<h3 style="margin-top: 5px" v-if="app_inf.inf.amount!=null">Комиссия</h3>
+						{{ app_inf.inf.amount }}
+						<div style="width: 50%; height: 5%; border-bottom-style: solid; border-color: rgba(102, 255, 102, 0.8); border-width: 0.5px"></div>
+					</div>
 				</div>
 				<div class="ai_header">
-					<div class="app_accept" @click="sendApp(app_inf.inf)" v-if="app_inf.inf.status==1">Отправить</div>
+					<div class="app_accept" @click="sendApp(app_inf.inf)" v-if="app_inf.inf.status==1 || app_inf.inf.status==2">Отправить</div>
 					<div class="app_accept app_dec" @click="app_inf.open=false">Отклонить</div>
 				</div>
 			</div>
@@ -171,8 +192,13 @@
 						<div class="col">
 							{{ item.phone }}
 						</div>
-						<div class="col">
+						<div class="col" v-if="balance.open" @click="balance.open=false; balance.amount=item.balance; balance.id=item.id" >
 							{{ item.balance }}
+						</div>
+						<div class="col" v-else>
+							<form v-on:submit.prevent="changeBalance">
+								<input type="text" v-model="balance.amount" style="text-align: center;">
+							</form>
 						</div>
 						<div class="col">
 							<button class="col" @click="openImages(item)">Смотреть</button>
@@ -203,6 +229,11 @@
 		},
 		data(){
 			return{
+				balance: {
+					open: true,
+					amount: 0,
+					id: 0
+				},
 				auth: true, //валидность пользователя
 				act: 0, //переключение таблиц
 				ws: {}, //вебсокет
@@ -224,6 +255,15 @@
 			}
 		},
 		methods:{
+			async changeBalance(){
+				var query = await axios.post('http://aida.market:8000/update/driver/balance', 
+										{id: this.balance.id, balance: this.balance.amount});
+				if(query.status == 200){
+					this.balance.open=true;
+				} else {
+					alert(query.status)
+				}
+			},
 			//маркер новой заявки
 			popUpApp(){
 				var result = 0;
@@ -302,6 +342,14 @@
 						}
 					}
 					return result
+				}
+			},
+			cost(a, b){
+				var c = a + b;
+				if(c==0){
+					return ''
+				} else {
+					return c
 				}
 			},
 			//считывание водителей
